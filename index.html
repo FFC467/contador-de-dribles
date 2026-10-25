@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D3557">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14.5' fill='%23D85B1C'/%3E%3Cpath d='M1.5 16h29M16 1.5v29M6.2 5.6c4.3 3.4 4.3 17.4 0 20.8M25.8 5.6c-4.3 3.4-4.3 17.4 0 20.8' fill='none' stroke='%232A1A10' stroke-width='1.7'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Dribles">
+<meta name="mobile-web-app-capable" content="yes">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Contador de Dribles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Text:wght@700;800&display=swap">
+<style>
+/* Layout: one phone-width column. The counter sits in the centre circle of a
+   painted court panel, the scoreboard strip and the buttons sit under it, and
+   the sound trace, the video, tuning, tips and history follow below. */
+:root {
+  --floor: #EFDDBD;
+  --plank: rgba(120, 80, 34, .085);
+  --surface: #F7EDDA;
+  --hair: rgba(24, 32, 44, .15);
+  --ink: #18202C;
+  --ink-2: #5D584F;
+  --trace: rgba(24, 32, 44, .16);
+  --paint: #1D3557;
+  --paint-2: #24426B;
+  --paint-ink: #F6EBD7;
+  --chalk: rgba(246, 235, 215, .45);
+  --clock-bg: rgba(8, 14, 24, .35);
+  --ball: #D85B1C;
+  --ball-btn: #BF4E17;
+  --ball-ink: #FFF8F0;
+  --seam: #2A1A10;
+  --muted: #A0968A;
+  --screen: #0B0E12;
+  --f-num: "Big Shoulders Display", "Big Shoulders", "Oswald", "Arial Narrow", sans-serif;
+  --f-label: "Big Shoulders Text", "Big Shoulders", "Arial Narrow", sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --floor: #12161C; --plank: rgba(255, 255, 255, .028); --surface: #1A2029; --hair: rgba(242, 232, 216, .14);
+    --ink: #F2E8D8; --ink-2: #ADA497; --trace: rgba(242, 232, 216, .16);
+    --paint: #1A2E4C; --paint-2: #213D66; --paint-ink: #F6EBD7; --chalk: rgba(246, 235, 215, .34); --clock-bg: rgba(0, 0, 0, .35);
+    --ball: #F07B36; --ball-btn: #F07B36; --ball-ink: #1B1108; --seam: #2A1A10; --muted: #6E685F; --screen: #050608;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --floor: #12161C; --plank: rgba(255, 255, 255, .028); --surface: #1A2029; --hair: rgba(242, 232, 216, .14);
+  --ink: #F2E8D8; --ink-2: #ADA497; --trace: rgba(242, 232, 216, .16);
+  --paint: #1A2E4C; --paint-2: #213D66; --paint-ink: #F6EBD7; --chalk: rgba(246, 235, 215, .34); --clock-bg: rgba(0, 0, 0, .35);
+  --ball: #F07B36; --ball-btn: #F07B36; --ball-ink: #1B1108; --seam: #2A1A10; --muted: #6E685F; --screen: #050608;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--floor);
+  background-image: repeating-linear-gradient(90deg, transparent 0 55px, var(--plank) 55px 57px);
+  color: var(--ink);
+  font: 16px/1.45 var(--f-body);
+}
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-block: 14px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 16px;
+}
+
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg { width: 30px; height: 30px; flex: none; }
+.ball-fill { fill: var(--ball); }
+.ball-seam { fill: none; stroke: var(--seam); stroke-width: 1.7; stroke-linecap: round; }
+h1 { margin: 0; font: 800 23px/1 var(--f-label); letter-spacing: .06em; text-transform: uppercase; text-wrap: balance; }
+.modes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface); border: 1px solid var(--hair); }
+.modes button { font: 700 14px/1 var(--f-body); color: var(--ink-2); background: none; border: 0; border-radius: 999px; padding: 9px 14px; cursor: pointer; }
+.modes button[aria-checked="true"] { background: var(--ink); color: var(--floor); }
+.modes button:disabled { cursor: default; }
+.modes button:disabled:not([aria-checked="true"]) { opacity: .5; }
+
+.court { position: relative; display: grid; justify-items: center; gap: 12px; padding: 14px 14px 18px; border-radius: 22px; background: var(--paint); color: var(--paint-ink); overflow: hidden; }
+.court-top { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tag { font: 800 12px/1 var(--f-label); letter-spacing: .16em; text-transform: uppercase; padding: 6px 9px; border: 1.5px solid var(--chalk); border-radius: 6px; }
+.clock { min-width: 3.4ch; padding: 4px 10px 3px; border-radius: 6px; background: var(--clock-bg); color: var(--ball); font: 900 30px/1 var(--f-num); font-variant-numeric: tabular-nums; text-align: center; }
+.mid { position: relative; width: 100%; display: grid; place-items: center; }
+.mid::before { content: ""; position: absolute; left: -14px; right: -14px; top: 50%; height: 3px; margin-top: -1.5px; background: var(--chalk); }
+.circle { position: relative; width: min(76vw, 310px); max-width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--chalk); background: var(--paint-2); display: grid; place-content: center; text-align: center; }
+.count { font: 900 clamp(104px, 33vw, 184px)/.84 var(--f-num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; transform-origin: 50% 85%; }
+.count.wide { font-size: clamp(84px, 25vw, 140px); }
+.count.dim { opacity: .55; }
+.count.bump { animation: bump .2s ease-out; }
+.count-label { margin-top: 8px; font: 800 13px/1.2 var(--f-label); letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
+.ripple { position: absolute; inset: -3px; border-radius: 50%; border: 5px solid var(--ball); pointer-events: none; animation: ripple .65s ease-out forwards; }
+.court.record .circle { animation: glow 1.2s ease-out 2; }
+.status { margin: 0; min-height: 2.9em; max-width: 36ch; text-align: center; text-wrap: balance; }
+.court[data-live] .status::before { content: ""; display: inline-block; width: .55em; height: .55em; margin-right: .5em; border-radius: 50%; background: var(--ball); vertical-align: .05em; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes bump { from { transform: scale(1.06, .9); } to { transform: none; } }
+@keyframes ripple { from { transform: scale(.94); opacity: .95; } to { transform: scale(1.32); opacity: 0; } }
+@keyframes glow { from { box-shadow: 0 0 0 0 var(--ball); } to { box-shadow: 0 0 0 26px transparent; } }
+@keyframes pulse { 50% { opacity: .25; } }
+
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--hair); border-radius: 14px; background: var(--surface); }
+.board > div { display: grid; gap: 4px; padding: 10px 12px 12px; min-width: 0; }
+.board > div + div { border-left: 1px solid var(--hair); }
+.lbl { font: 800 11.5px/1.1 var(--f-label); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.val { font: 900 36px/1 var(--f-num); font-variant-numeric: tabular-nums; }
+
+.notice { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hair); }
+.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 12px 16px; border-radius: 999px; border: 2px solid var(--hair); background: transparent; color: var(--ink); font: 700 16px/1.15 var(--f-body); text-align: center; cursor: pointer; }
+.btn.primary { grid-column: 1 / -1; min-height: 60px; font-size: 19px; background: var(--ball-btn); border-color: var(--ball-btn); color: var(--ball-ink); }
+.btn.primary.stop { background: var(--ink); border-color: var(--ink); color: var(--floor); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.btn:focus-visible, .btn:has(input:focus-visible), .modes button:focus-visible, .link:focus-visible, summary:focus-visible, .chip:focus-visible { outline: 3px solid var(--ball); outline-offset: 2px; }
+.under { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.link { background: none; border: 0; padding: 4px 0; color: var(--ink); font: 700 15px/1.3 var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.link:disabled { opacity: .5; cursor: default; }
+.hint { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+.sec { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--hair); }
+.sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+h2, details.sec > summary { margin: 0; font: 800 14px/1.2 var(--f-label); letter-spacing: .14em; text-transform: uppercase; }
+.legend { display: flex; gap: 12px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; vertical-align: -1px; }
+.k-ok { background: var(--ball); }
+.k-no { background: var(--muted); }
+canvas { display: block; width: 100%; }
+#scope { height: 84px; }
+#timeline { height: 72px; cursor: pointer; touch-action: manipulation; }
+video { display: block; width: 100%; max-height: 52vh; border-radius: 12px; background: var(--screen); }
+.series { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chip { display: grid; justify-items: start; gap: 3px; min-width: 66px; padding: 8px 12px; border: 1px solid var(--hair); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; }
+button.chip { cursor: pointer; }
+.chip b { font: 900 26px/1 var(--f-num); font-variant-numeric: tabular-nums; }
+.chip span { font-size: 12.5px; color: var(--ink-2); }
+.chip.top b { color: var(--ball); }
+details.sec { display: block; }
+details.sec > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "+"; font: 700 20px/1 var(--f-body); }
+details.sec[open] > summary::after { content: "\2013"; }
+.sec-body { display: grid; gap: 14px; margin-top: 12px; }
+.field { display: grid; gap: 6px; }
+.field label { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+output { color: var(--ink-2); font-weight: 400; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; margin: 0; accent-color: var(--ball); }
+.check { display: flex; align-items: flex-start; gap: 10px; }
+.check input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ball); }
+.tips { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 62ch; }
+.history { margin: 0; padding: 0; list-style: none; }
+.history li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hair); }
+.history b { font: 900 24px/1 var(--f-num); font-variant-numeric: tabular-nums; }
+.history span { color: var(--ink-2); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  .count.bump, .court.record .circle, .court[data-live] .status::before { animation: none; }
+  .ripple { display: none; }
+}
+</style>
+
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle class="ball-fill" cx="16" cy="16" r="14.5"/><path class="ball-seam" d="M1.5 16h29M16 1.5v29M6.2 5.6c4.3 3.4 4.3 17.4 0 20.8M25.8 5.6c-4.3 3.4-4.3 17.4 0 20.8"/></svg>
+      <h1>Contador de Dribles</h1>
+    </div>
+    <div class="modes" id="modes" role="radiogroup" aria-label="Modo de contagem">
+      <button type="button" role="radio" data-mode="serie" aria-checked="true">Série</button>
+      <button type="button" role="radio" data-mode="t30" aria-checked="false">30 s</button>
+      <button type="button" role="radio" data-mode="t60" aria-checked="false">60 s</button>
+    </div>
+  </header>
+
+  <section class="court" id="court" aria-label="Contador">
+    <div class="court-top"><span class="tag" id="modeTag">Série</span><span class="clock" id="clock">0:00</span></div>
+    <div class="mid">
+      <div class="circle" id="circle">
+        <div class="count" id="count">0</div>
+        <div class="count-label" id="countLabel">dribles seguidos</div>
+      </div>
+    </div>
+    <p class="status" id="status" aria-live="polite">Toca em Começar e dribla perto do telemóvel.</p>
+  </section>
+
+  <div class="board">
+    <div><span class="lbl" id="bestLbl">Melhor série</span><span class="val" id="best">0</span></div>
+    <div><span class="lbl">Recorde</span><span class="val" id="record">0</span></div>
+    <div><span class="lbl" id="totalLbl">Total</span><span class="val" id="total">0</span></div>
+  </div>
+
+  <p class="notice" id="notice" hidden>No Claude esta página não pode usar o microfone. Grava o drible em vídeo, com o telemóvel parado, e escolhe-o aqui: a app conta os toques e acompanha o vídeo.</p>
+
+  <div class="actions" id="actions">
+    <button class="btn primary" id="go" type="button">Começar</button>
+    <button class="btn" id="teach" type="button">Ensinar o som da bola</button>
+    <label class="btn" id="fileLbl" for="file">Contar num vídeo<input id="file" type="file" accept="video/*,audio/*"></label>
+  </div>
+  <div class="under" id="under">
+    <p class="hint" id="calibInfo"></p>
+    <button class="link" id="demo" type="button">Ver um exemplo</button>
+  </div>
+
+  <section class="sec" id="scopeSec">
+    <div class="sec-head"><h2>O que o telemóvel ouve</h2><span class="legend"><span><i class="k-ok"></i>contado</span><span><i class="k-no"></i>ignorado</span></span></div>
+    <canvas id="scope" aria-label="Nível do som nos últimos 4 segundos"></canvas>
+  </section>
+
+  <section class="sec" id="videoSec" hidden>
+    <div class="sec-head"><h2 id="videoTitle">Vídeo</h2><button class="link" id="videoClose" type="button">Fechar vídeo</button></div>
+    <video id="video" playsinline controls preload="metadata"></video>
+    <canvas id="timeline" aria-label="Toques ao longo do vídeo; toca para saltar para esse momento"></canvas>
+    <p class="hint" id="videoInfo"></p>
+  </section>
+
+  <section class="sec">
+    <h2 id="seriesTitle">Séries desta sessão</h2>
+    <ol class="series" id="series"></ol>
+    <p class="hint" id="seriesEmpty">As séries aparecem aqui quando a bola para.</p>
+  </section>
+
+  <details class="sec" id="tune">
+    <summary>Afinar a deteção</summary>
+    <div class="sec-body">
+      <div class="field">
+        <label for="sens">Sensibilidade <output id="sensOut" for="sens">50</output></label>
+        <input id="sens" type="range" min="0" max="100" step="5" value="50">
+        <p class="hint">Sobe se falhar dribles fracos. Desce se contar barulhos que não são a bola.</p>
+      </div>
+      <div class="field">
+        <label for="minGap">Tempo mínimo entre toques <output id="minGapOut" for="minGap">150 ms</output></label>
+        <input id="minGap" type="range" min="80" max="400" step="10" value="150">
+      </div>
+      <div class="field">
+        <label for="streakGap">Pausa que acaba a série <output id="streakGapOut" for="streakGap">2 s</output></label>
+        <input id="streakGap" type="range" min="1" max="5" step="0.5" value="2">
+      </div>
+      <label class="check"><input id="useSound" type="checkbox" checked> <span>Ignorar sons diferentes da bola, como vozes e palmas. Ao vivo precisa que ensines o som; nos vídeos aprende sozinha.</span></label>
+      <label class="check"><input id="dropLoose" type="checkbox" checked> <span>Não contar os ressaltos da bola solta quando ela foge no fim da série.</span></label>
+      <div class="under"><button class="link" id="forget" type="button">Esquecer o som aprendido</button></div>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary>Dicas para contar bem</summary>
+    <div class="sec-body">
+      <ul class="tips">
+        <li>Põe o telemóvel no chão, a um ou dois metros de onde a bola bate, com o microfone destapado.</li>
+        <li>Antes da primeira vez, toca em Ensinar o som da bola e dribla seis vezes com calma.</li>
+        <li>Desliga a televisão e a música: menos barulho, menos enganos.</li>
+        <li>No modo Série a contagem fecha quando a bola fica parada dois segundos. Depois é só recomeçar.</li>
+        <li>Se contar a mais, baixa a sensibilidade. Se falhar dribles, sobe.</li>
+        <li>Nos vídeos, grava com o telemóvel pousado e sem música por cima.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary>Últimos resultados</summary>
+    <div class="sec-body">
+      <ol class="history" id="history"></ol>
+      <p class="hint" id="historyEmpty">Ainda não há resultados guardados neste aparelho.</p>
+      <div class="under"><button class="link" id="clearRecords" type="button">Apagar recordes e resultados</button></div>
+    </div>
+  </details>
+</main>
+
+<script>
+(() => {
+'use strict';
+
+/* ===== Detection: plain functions, no DOM, so they also run on a video's sound ===== */
+
+const FRAME_S = 0.005;   // level frames of 5 ms
+const BANDS = 20;        // log-spaced bands for the sound fingerprint
+
+function median(a) {
+  if (!a.length) return null;
+  const s = Array.from(a).sort((x, y) => x - y), m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function corr(a, b) {
+  let ab = 0, aa = 0, bb = 0;
+  for (let i = 0; i < a.length; i++) { ab += a[i] * b[i]; aa += a[i] * a[i]; bb += b[i] * b[i]; }
+  return aa && bb ? ab / Math.sqrt(aa * bb) : 0;
+}
+
+function meanVec(vs) {
+  const m = new Array(BANDS).fill(0);
+  for (const v of vs) for (let i = 0; i < BANDS; i++) m[i] += v[i] / vs.length;
+  return m;
+}
+
+function makeFFT(n) {
+  const bits = Math.round(Math.log2(n)), cos = new Float32Array(n / 2), sin = new Float32Array(n / 2), rev = new Uint32Array(n);
+  for (let i = 0; i < n / 2; i++) { cos[i] = Math.cos(2 * Math.PI * i / n); sin[i] = Math.sin(2 * Math.PI * i / n); }
+  for (let i = 0; i < n; i++) { let r = 0; for (let b = 0; b < bits; b++) r |= ((i >> b) & 1) << (bits - 1 - b); rev[i] = r; }
+  return (re, im) => {
+    for (let i = 0; i < n; i++) {
+      const j = rev[i];
+      if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let size = 2; size <= n; size <<= 1) {
+      const half = size >> 1, step = n / size;
+      for (let i = 0; i < n; i += size) {
+        for (let j = 0, k = 0; j < half; j++, k += step) {
+          const a = i + j, b = a + half;
+          const tr = re[b] * cos[k] + im[b] * sin[k], ti = im[b] * cos[k] - re[b] * sin[k];
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+        }
+      }
+    }
+  };
+}
+
+function bandEdges(sr, n) {
+  const lo = 70, hi = Math.min(9000, sr * 0.45), e = [];
+  for (let b = 0; b <= BANDS; b++) e.push(Math.round(lo * Math.pow(hi / lo, b / BANDS) * n / sr));
+  for (let b = 1; b <= BANDS; b++) if (e[b] <= e[b - 1]) e[b] = e[b - 1] + 1;
+  return e;
+}
+
+function biquad(type, f0, sr) {
+  const w0 = 2 * Math.PI * f0 / sr, al = Math.sin(w0) / Math.SQRT2, cw = Math.cos(w0), a0 = 1 + al;
+  const c = (type === 'lp' ? 1 - cw : 1 + cw) / 2;
+  return { b0: c / a0, b1: (type === 'lp' ? 2 : -2) * c / a0, b2: c / a0, a1: -2 * cw / a0, a2: (1 - al) / a0, z1: 0, z2: 0 };
+}
+
+// Finds sharp, loud onsets in a stream of samples and judges whether each one
+// sounds like the ball hitting the floor.
+class BounceDetector {
+  constructor(sr, opt = {}) {
+    this.sr = sr;
+    this.hop = Math.max(16, Math.round(sr * FRAME_S));
+    this.fftN = sr > 32000 ? 2048 : 1024;
+    this.fft = makeFFT(this.fftN);
+    this.re = new Float32Array(this.fftN);
+    this.im = new Float32Array(this.fftN);
+    this.win = new Float32Array(this.fftN);
+    for (let i = 0; i < this.fftN; i++) this.win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (this.fftN - 1));
+    this.edges = bandEdges(sr, this.fftN);
+    this.ring = new Float32Array(32768);
+    this.mask = 32767;
+    // 60 Hz high-pass drops rumble and handling noise; the low (<300 Hz) and
+    // high (>2 kHz) bands let a bounce show up even under a loud voice
+    this.hp = biquad('hp', 60, sr);
+    this.lo = biquad('lp', 300, sr);
+    this.hi = biquad('hp', 2000, sr);
+    this.n = 0; this.accN = 0; this.f = 0;
+    this.acc = new Float64Array(4);   // broadband, low, mid, high
+    this.e = new Float32Array(4);
+    this.hist = [0, 1, 2, 3].map(() => new Float32Array(16).fill(-120));
+    this.fb = [0, 1, 2, 3].map(() => new Float32Array(400));
+    this.floors = new Float32Array(4).fill(-120);
+    this.fbN = 0; this.tmp = new Float32Array(400); this.floor = -120;
+    this.pend = []; this.lastCand = -1e9; this.lastHit = -1e9;
+    this.peaks = []; this.cands = []; this.refHold = null; this.fresh = false;
+    this.beats = []; this.period = 0; this.lastBeat = -1e9;
+    this.levels = opt.keepLevels ? [] : null;
+    this.onEvent = opt.onEvent || null;
+    this.onLevel = opt.onLevel || null;
+    this.calib = opt.calib || null;
+    this.st = {};
+    this.set(opt.settings || {});
+  }
+
+  set(s) {
+    this.st = Object.assign({ sens: 0.5, minGapMs: 150, useSound: true, relaxed: false }, this.st, s);
+    const k = this.st.sens;
+    this.riseDb = 12 - 5 * k;     // how sudden the onset must be
+    this.aboveDb = 16 - 10 * k;   // how far above the background noise
+    this.windowDb = 6 + 12 * k;   // how much quieter than a typical bounce it may be
+    this.simMin = 0.6 - 0.3 * k;  // how close to the learned sound
+  }
+
+  get time() { return this.n / this.sr; }
+
+  // the level of a typical bounce: the loud end of what was heard in the last 4 s
+  reference(t) {
+    if (t - this.lastHit > 2.5 && this.lastHit > 0) {
+      // after a pause the next series may be softer or louder: learn its level again
+      this.cands = []; this.peaks = []; this.refHold = null; this.beats = []; this.period = 0; this.fresh = true;
+    }
+    const recent = this.cands.filter(c => t - c.t < 4).map(c => c.db).sort((a, b) => a - b);
+    if (recent.length >= 3) return (this.refHold = recent[Math.floor(recent.length * 0.8)]);
+    if (this.refHold !== null) return this.refHold;
+    if (this.calib && !this.fresh) return this.calib.refDb;
+    return this.peaks.length ? Math.max(...this.peaks) : null;
+  }
+
+  process(x) {
+    const r = this.ring, m = this.mask, hop = this.hop, acc = this.acc, H = this.hp, L = this.lo, Q = this.hi;
+    for (let i = 0; i < x.length; i++) {
+      const v = x[i];
+      const y = H.b0 * v + H.z1;
+      H.z1 = H.b1 * v - H.a1 * y + H.z2; H.z2 = H.b2 * v - H.a2 * y;
+      const l = L.b0 * y + L.z1;
+      L.z1 = L.b1 * y - L.a1 * l + L.z2; L.z2 = L.b2 * y - L.a2 * l;
+      const h = Q.b0 * y + Q.z1;
+      Q.z1 = Q.b1 * y - Q.a1 * h + Q.z2; Q.z2 = Q.b2 * y - Q.a2 * h;
+      const mid = y - l - h;
+      r[this.n & m] = y;
+      this.n++;
+      acc[0] += y * y; acc[1] += l * l; acc[2] += mid * mid; acc[3] += h * h;
+      if (++this.accN === hop) {
+        for (let b = 0; b < 4; b++) { this.e[b] = 10 * Math.log10(acc[b] / hop + 1e-12); acc[b] = 0; }
+        this.accN = 0;
+        this._frame(this.e);
+      }
+    }
+  }
+
+  _frame(e) {
+    const f = this.f++, db = e[0];
+    for (let b = 0; b < 4; b++) { this.hist[b][f & 15] = e[b]; this.fb[b][f % 400] = e[b]; }
+    if (this.fbN < 400) this.fbN++;
+    if (f % 10 === 0 || this.fbN < 50) {
+      // background = 20th percentile of the last 2 s, per band
+      const t = this.tmp.subarray(0, this.fbN);
+      for (let b = 0; b < 4; b++) {
+        t.set(this.fb[b].subarray(0, this.fbN));
+        t.sort();
+        this.floors[b] = t[Math.floor(this.fbN * 0.2)];
+      }
+      this.floor = this.floors[0];
+    }
+    if (this.levels) this.levels.push(db);
+    if (this.onLevel) this.onLevel(db, this.floor, f);
+
+    // candidates take their peak from the next 15 ms, wait for a full spectrum window, then get judged in order
+    const q = this.pend;
+    for (const p of q) if (f - p.f <= 3 && db > p.peak) p.peak = db;
+    while (q.length && f - q[0].f >= 6 && this.n >= q[0].start + this.fftN) this._judge(q.shift());
+    if (f < 3 || f - this.lastCand < 5) return;
+    let onset = false;
+    for (let b = 0; b < 4 && !onset; b++) {
+      onset = e[b] - this.hist[b][(f - 2) & 15] >= this.riseDb && e[b] - this.floors[b] >= this.aboveDb * 0.6;
+    }
+    if (!onset) return;
+    this.lastCand = f;
+    const start = Math.max(0, this.n - 2 * this.hop);
+    q.push({ f, t: start / this.sr, start, peak: db, floor: this.floor });
+  }
+
+  _judge(p) {
+    const vec = this._spectrum(p.start), st = this.st, cal = this.calib;
+    const sim = cal && cal.template ? corr(vec, cal.template) : null;
+    const gap = p.t - this.lastHit, ref = this.reference(p.t);
+    // next to a known bounce level the background matters less: fast dribbling in an
+    // echoing room keeps the background high between hits
+    const audible = p.peak - p.floor >= this.aboveDb / 2;
+    let why = null;
+    if (!audible || (ref === null || st.relaxed) && p.peak - p.floor < this.aboveDb) why = 'fraco';
+    else if (st.relaxed) { if (gap < 0.25) why = 'cedo'; }
+    else if (gap * 1000 < st.minGapMs) why = 'cedo';
+    else if (st.useSound && sim !== null && sim < this.simMin) why = 'som';
+    else if (ref !== null) {
+      if (p.peak < ref - this.windowDb) why = 'fraco';
+      // weaker than a bounce: counts only on the beat, once the beat is known
+      // (a hand touching the ball or an echo comes off it)
+      else if (p.peak < ref - 6 && (!this.period || p.t - this.lastBeat < 0.7 * this.period)) why = 'fraco';
+    }
+    if (audible && why !== 'cedo' && why !== 'som') {
+      this.cands.push({ t: p.t, db: p.peak });
+      if (this.cands.length > 32) this.cands.shift();
+    }
+    const ev = { t: p.t, db: p.peak, floor: p.floor, sim, vec, ok: !why, why };
+    if (ev.ok) {
+      if (ref === null || p.peak >= ref - 6) {
+        // the beat is kept from the clear bounces only
+        const g = p.t - this.lastBeat;
+        if (g < 3) { this.beats.push(g); if (this.beats.length > 8) this.beats.shift(); }
+        this.period = this.beats.length >= 3 ? median(this.beats) : 0;
+        this.lastBeat = p.t;
+      }
+      this.lastHit = p.t;
+      this.peaks.push(p.peak);
+      if (this.peaks.length > 9) this.peaks.shift();
+    }
+    if (this.onEvent) this.onEvent(ev);
+  }
+
+  _spectrum(start) {
+    const N = this.fftN, re = this.re, im = this.im, e = this.edges, v = new Array(BANDS);
+    for (let i = 0; i < N; i++) { re[i] = this.ring[(start + i) & this.mask] * this.win[i]; im[i] = 0; }
+    this.fft(re, im);
+    let mean = 0;
+    for (let b = 0; b < BANDS; b++) {
+      let s = 0;
+      for (let k = e[b]; k < e[b + 1]; k++) s += re[k] * re[k] + im[k] * im[k];
+      v[b] = 10 * Math.log10(s / (e[b + 1] - e[b]) + 1e-12);
+      mean += v[b];
+    }
+    mean /= BANDS;
+    for (let b = 0; b < BANDS; b++) v[b] -= mean;
+    return v;
+  }
+}
+
+// Builds the ball's fingerprint from bounces heard on purpose (anchor 'top')
+// or from the hits of a whole video (anchor 'median').
+function learnSound(evs, anchor) {
+  if (evs.length < 3) return null;
+  const dbs = evs.map(e => e.db);
+  const cut = anchor === 'median' ? median(dbs) - 10 : Math.max(...dbs) - 12;
+  let keep = evs.filter(e => e.db >= cut);
+  let tpl = meanVec(keep.map(e => e.vec));
+  keep = keep.filter(e => corr(e.vec, tpl) >= 0.5);
+  if (keep.length < 3) return null;
+  tpl = meanVec(keep.map(e => e.vec));
+  return { refDb: median(keep.map(e => e.db)), template: tpl.map(x => Math.round(x * 100) / 100), n: keep.length, at: Date.now() };
+}
+
+// How many hits at the end of a series were the ball bouncing on its own:
+// a run of ever shorter gaps with ever quieter hits, as a dropped ball does.
+function looseBounces(hits) {
+  const n = hits.length;
+  if (n < 5) return 0;
+  const gap = j => hits[j].t - hits[j - 1].t;
+  const med = median(hits.map(h => h.db));
+  let end = n;
+  while (end > 3 && gap(end - 1) < 0.3 && hits[end - 1].db < med - 6) end--;   // the last tiny taps
+  const shrinks = j => { const r = gap(j) / gap(j - 1); return r > 0.6 && r < 0.9 && hits[j].db <= hits[j - 1].db + 1; };
+  let k = 0, j = end - 1;
+  // the last gap may hide a bounce too quiet to count: it then spans two shrinking gaps
+  if (j >= 3 && shrinks(j - 1)) {
+    const r = gap(j) / gap(j - 1);
+    if (r > 1.2 && r < 1.75 && hits[j].db <= hits[j - 1].db + 1) { k = 1; j--; }
+  }
+  for (; j >= 2 && shrinks(j); j--) k++;
+  if (k < 2) return 0;
+  const j0 = end - 1 - k, before = [];
+  for (let i = 1; i < j0; i++) before.push(gap(i));
+  // a run that starts with a flight longer than the dribbles: its first hit was already loose
+  const drop = (n - end) + (!before.length || gap(j0) >= 1.25 * median(before) ? k + 1 : k);
+  return Math.min(drop, n - 1);
+}
+
+// Groups hits into series: a pause longer than `gap` seconds ends one.
+class Tally {
+  constructor(gap, dropLoose) { this.gap = gap; this.dropLoose = dropLoose; this.cur = null; this.done = []; }
+  hit(t, db) {
+    const closed = this.cur && t - this.cur.last > this.gap ? this.close() : null;
+    if (!this.cur) this.cur = { start: t, last: t, hits: [] };
+    this.cur.hits.push({ t, db });
+    this.cur.last = t;
+    return closed;
+  }
+  tick(now) { return this.cur && now - this.cur.last > this.gap ? this.close() : null; }
+  close() {
+    const c = this.cur;
+    if (!c) return null;
+    this.cur = null;
+    const loose = this.dropLoose ? looseBounces(c.hits) : 0;
+    const hits = c.hits.slice(0, c.hits.length - loose);
+    const s = { start: c.start, end: hits[hits.length - 1].t, count: hits.length, loose, hits };
+    this.done.push(s);
+    return s;
+  }
+  get running() { return this.cur ? this.cur.hits.length : 0; }
+  get total() { return this.done.reduce((a, s) => a + s.count, 0) + this.running; }
+}
+
+// Counts a whole recording. A first pass finds the bounces, a second one keeps
+// only the hits that sound like them.
+function analyse(x, sr, s) {
+  const run = (calib, useSound) => {
+    const events = [];
+    const det = new BounceDetector(sr, { settings: { sens: s.sens / 100, minGapMs: s.minGap, useSound }, calib, keepLevels: true, onEvent: e => events.push(e) });
+    for (let i = 0; i < x.length; i += 8192) det.process(x.subarray(i, i + 8192));
+    return { events, levels: det.levels, hop: det.hop };
+  };
+  let r = run(null, false), learned = null;
+  if (s.useSound) {
+    learned = learnSound(r.events.filter(e => e.ok), 'median');
+    if (learned) r = run(learned, true);
+  }
+  const tally = new Tally(s.streakGap, s.dropLoose);
+  for (const e of r.events) if (e.ok) tally.hit(e.t, e.db);
+  tally.close();
+  return { duration: x.length / sr, sr, hop: r.hop, levels: r.levels, events: r.events, streaks: tally.done, learned: !!learned };
+}
+
+// Simulated sound for the example: ball, hand, clap or voice at given times.
+function synth(sr, plan, dur) {
+  const n = Math.ceil(dur * sr), x = new Float32Array(n), TAU = 2 * Math.PI;
+  let seed = 12345, br = 0;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 1073741823.5 - 1;
+  for (let i = 0; i < n; i++) { br = 0.985 * br + 0.015 * rnd(); x[i] = 0.01 * br + 0.0006 * rnd(); }
+  for (const p of plan) {
+    const i0 = Math.round(p.t * sr), len = Math.min(n - i0, Math.round(0.3 * sr));
+    let prev = 0;
+    for (let i = 0; i < len; i++) {
+      const t = i / sr, w = rnd();
+      let v = 0;
+      if (p.k === 'ball') v = 0.55 * Math.sin(TAU * 105 * t) * Math.exp(-t / 0.035) + 0.3 * Math.sin(TAU * 940 * t) * Math.exp(-t / 0.045) + 0.12 * Math.sin(TAU * 2080 * t) * Math.exp(-t / 0.02) + 0.35 * w * Math.exp(-t / 0.0025);
+      else if (p.k === 'hand') v = 0.6 * w * Math.exp(-t / 0.006);
+      else if (p.k === 'clap') { v = 0.8 * (w - prev) * Math.exp(-t / 0.01); prev = w; }
+      else if (p.k === 'voice') {
+        const env = Math.min(1, t / 0.04) * Math.exp(-Math.max(0, t - 0.15) / 0.05);
+        for (let h = 1; h <= 14; h++) {
+          const fh = 190 * h, g = Math.exp(-((fh - 700) ** 2) / 2e5) + 0.5 * Math.exp(-((fh - 1200) ** 2) / 3e5);
+          v += g * Math.sin(TAU * fh * t) / Math.sqrt(h);
+        }
+        v *= 0.3 * env;
+      }
+      x[i0 + i] += p.a * v;
+    }
+  }
+  return x;
+}
+
+function demoPlan() {
+  const plan = [];
+  let t = 0.6, seed = 3;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 14; i++) {
+    plan.push({ t, k: 'ball', a: 0.45 * (0.85 + 0.3 * r()) });
+    plan.push({ t: t + 0.19 + 0.04 * r(), k: 'hand', a: 0.07 });
+    t += 0.42 + 0.08 * r();
+  }
+  // the ball gets away and bounces on its own, lower and faster each time
+  let last = plan[plan.length - 2].t, gap = 0.8, a = 0.4;
+  for (let i = 0; i < 5; i++) { last += gap; plan.push({ t: last, k: 'ball', a }); gap *= 0.8; a *= 0.8; }
+  return plan;
+}
+
+/* ===== App ===== */
+
+const KEY = 'contador-dribles-v1';
+const MODES = { serie: { label: 'Série', secs: 0 }, t30: { label: '30 s', secs: 30 }, t60: { label: '60 s', secs: 60 } };
+const SCOPE_N = 800;                 // 4 s of level frames
+const micBlocked = !!window.claude;  // inside Claude the frame never gets the microphone
+const TAP_SRC = "class T extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(1024);this.i=0}process(i){const c=i[0]&&i[0][0];if(c){for(let k=0;k<c.length;k++){this.b[this.i++]=c[k];if(this.i===1024){this.port.postMessage(this.b,[this.b.buffer]);this.b=new Float32Array(1024);this.i=0}}}return true}}registerProcessor('dribble-tap',T)";
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+const data = load();
+data.settings = Object.assign({ sens: 50, minGap: 150, streakGap: 2, useSound: true, dropLoose: true }, data.settings);
+data.records = data.records && typeof data.records === 'object' ? data.records : {};
+data.history = Array.isArray(data.history) ? data.history : [];
+if (!data.calib || !Array.isArray(data.calib.template) || data.calib.template.length !== BANDS) data.calib = null;
+
+let mode = MODES[data.mode] ? data.mode : 'serie';
+let state = 'idle';   // idle | starting | countdown | listening | teaching | demo | video
+let live = null, scopeL = null, video = null, lastStreak = null, raf = 0, wake = null;
+const lastTimed = {};
+const session = { best: { serie: 0, t30: 0, t60: 0 }, total: 0, items: [] };
+
+const ui = {};
+['court', 'modeTag', 'clock', 'circle', 'count', 'countLabel', 'status', 'bestLbl', 'best', 'record', 'totalLbl', 'total', 'notice',
+ 'go', 'teach', 'fileLbl', 'file', 'calibInfo', 'demo', 'scopeSec', 'scope', 'videoSec', 'videoTitle', 'videoClose', 'video', 'timeline',
+ 'videoInfo', 'seriesTitle', 'series', 'seriesEmpty', 'sens', 'sensOut', 'minGap', 'minGapOut', 'streakGap', 'streakGapOut',
+ 'useSound', 'dropLoose', 'forget', 'history', 'historyEmpty', 'clearRecords'].forEach(id => { ui[id] = document.getElementById(id); });
+const modeBtns = [...document.querySelectorAll('.modes button')];
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const fmtNum = (v, d = 1) => v.toLocaleString('pt-PT', { maximumFractionDigits: d });
+const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function fmtDate(at) {
+  const d = new Date(at), p = v => String(v).padStart(2, '0');
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}, ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fmtClock(s, down) {
+  const v = Math.max(0, down ? Math.ceil(s - 1e-6) : Math.floor(s));
+  return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, '0')}`;
+}
+const looseNote = s => s.loose ? ` Não contei ${plural(s.loose, 'ressalto', 'ressaltos')} da bola solta.` : '';
+const setStatus = text => { ui.status.textContent = text; };
+
+/* ----- sound input ----- */
+
+async function openInput(onSamples) {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) throw Object.assign(new Error('sem áudio'), { name: 'NoAudio' });
+  const ctx = new AC();
+  const resumed = ctx.resume ? ctx.resume().catch(() => {}) : null;
+  let stream = null, src;
+  try {
+    const fake = window.__dribble && window.__dribble.fakeMic;
+    if (fake) {
+      const x = fake(ctx.sampleRate), buf = ctx.createBuffer(1, x.length, ctx.sampleRate);
+      buf.getChannelData(0).set(x);
+      src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.start();
+    } else {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw Object.assign(new Error('inseguro'), { name: 'Insecure' });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+      src = ctx.createMediaStreamSource(stream);
+    }
+    await resumed;
+    if (ctx.state !== 'running') await ctx.resume();
+  } catch (e) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    ctx.close().catch(() => {});
+    throw e;
+  }
+  const sink = ctx.createGain();
+  sink.gain.value = 0;
+  sink.connect(ctx.destination);
+  let node;
+  try {
+    const url = URL.createObjectURL(new Blob([TAP_SRC], { type: 'text/javascript' }));
+    await ctx.audioWorklet.addModule(url);
+    URL.revokeObjectURL(url);
+    node = new AudioWorkletNode(ctx, 'dribble-tap', { channelCount: 1, channelCountMode: 'explicit' });
+    node.port.onmessage = e => onSamples(e.data);
+  } catch (e) {
+    node = ctx.createScriptProcessor(1024, 1, 1);
+    node.onaudioprocess = e => onSamples(e.inputBuffer.getChannelData(0).slice(0));
+  }
+  src.connect(node);
+  node.connect(sink);
+  return {
+    sr: ctx.sampleRate,
+    stop() {
+      try { src.disconnect(); node.disconnect(); } catch (e) {}
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      ctx.close().catch(() => {});
+    }
+  };
+}
+
+function micError(e) {
+  const n = e && e.name;
+  if (n === 'NotAllowedError' || n === 'SecurityError') return 'O microfone não foi autorizado. Dá autorização ao browser para usar o microfone e toca outra vez em Começar.';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'Não encontrei nenhum microfone neste aparelho.';
+  if (n === 'NotReadableError') return 'O microfone está ocupado por outra app. Fecha-a e tenta outra vez.';
+  if (n === 'Insecure') return 'O microfone só funciona numa página https ou no ficheiro aberto no computador.';
+  return 'Não consegui ligar o microfone. Tenta outra vez.';
+}
+
+async function keepAwake(on) {
+  try {
+    if (on && !wake && navigator.wakeLock) wake = await navigator.wakeLock.request('screen');
+    else if (!on && wake) { const w = wake; wake = null; await w.release(); }
+  } catch (e) { wake = null; }
+}
+
+function detSettings(extra) {
+  const s = data.settings;
+  return Object.assign({ sens: s.sens / 100, minGapMs: s.minGap, useSound: s.useSound, relaxed: false }, extra);
+}
+
+function setupDetector(L, extra, calib) {
+  L.events = [];
+  L.levels = new Float32Array(SCOPE_N).fill(-120);
+  L.lf = -1;
+  L.floor = -120;
+  L.det = new BounceDetector(L.sr, {
+    settings: detSettings(extra),
+    calib,
+    onEvent: ev => onDetEvent(L, ev),
+    onLevel: (db, fl, f) => { L.levels[f % SCOPE_N] = db; L.lf = f; L.floor = fl; }
+  });
+  L.tally = new Tally(data.settings.streakGap, data.settings.dropLoose);
+  scopeL = L;
+}
+
+async function openLive() {
+  if (state === 'video') closeVideo();
+  state = 'starting';
+  renderControls();
+  setStatus('A ligar o microfone…');
+  const L = { det: null };
+  live = L;
+  try {
+    L.io = await openInput(x => { if (L.det) L.det.process(x); });
+  } catch (e) {
+    live = null;
+    state = 'idle';
+    renderAll();
+    setStatus(micError(e));
+    return null;
+  }
+  if (live !== L) { L.io.stop(); return null; }
+  L.sr = L.io.sr;
+  L.timer = setInterval(tick, 100);
+  keepAwake(true);
+  return L;
+}
+
+function teardown() {
+  const L = live;
+  live = null;
+  if (L) {
+    clearInterval(L.timer);
+    clearInterval(L.feeder);
+    if (L.io) L.io.stop();
+  }
+  state = video ? 'video' : 'idle';
+  keepAwake(false);
+  renderAll();
+}
+
+/* ----- counting live ----- */
+
+async function startCount() {
+  const L = await openLive();
+  if (!L) return;
+  setupDetector(L, {}, data.calib);
+  const secs = MODES[mode].secs;
+  if (secs) {
+    L.tStart = 3;
+    L.tEnd = 3 + secs;
+    state = 'countdown';
+    setStatus('Prepara-te…');
+  } else {
+    state = 'listening';
+    setStatus('A ouvir. Começa a driblar!');
+  }
+  renderAll();
+  kick();
+}
+
+function stopCount() {
+  const L = live;
+  if (!L) return;
+  if (state === 'listening' && !MODES[mode].secs) {
+    const s = L.tally.close();
+    if (s) onStreakClosed(L, s);
+  } else if (state === 'listening' || state === 'countdown') {
+    setStatus('Desafio interrompido. Toca em Começar para tentar outra vez.');
+  }
+  teardown();
+}
+
+function onDetEvent(L, ev) {
+  L.events.push(ev);
+  if (L.events.length > 120) L.events.shift();
+  if (live !== L || !ev.ok) return;
+  if (state === 'teaching') { L.teach.push(ev); renderCount(); return; }
+  if (state === 'listening' && L.tEnd && (ev.t < L.tStart || ev.t > L.tEnd)) return;
+  if (state !== 'listening' && state !== 'demo') return;
+  const closed = L.tally.hit(ev.t, ev.db);
+  if (closed) onStreakClosed(L, closed);
+  if (!L.demo) session.total++;
+  bump();
+  renderCount();
+  renderBoard();
+  if (L.tally.running === 1 && !L.tEnd && !L.demo) setStatus('A contar!');
+}
+
+function onStreakClosed(L, s) {
+  if (L.demo) {
+    lastStreak = Object.assign({ demo: true }, s);
+    setStatus(`Exemplo: série de ${plural(s.count, 'drible', 'dribles')}.${looseNote(s)}`);
+    renderCount();
+    return;
+  }
+  session.total -= s.loose;
+  if (L.tEnd) { renderBoard(); return; }
+  lastStreak = s;
+  session.items.unshift({ n: s.count, sub: `série de ${fmtClock(s.end - s.start)}` });
+  session.best.serie = Math.max(session.best.serie, s.count);
+  const rec = s.count >= 3 && updateRecord('serie', s.count);
+  if (s.count >= 3) addHistory('serie', s.count, 'ao vivo');
+  setStatus(`Série de ${plural(s.count, 'drible', 'dribles')}.${looseNote(s)}${rec ? ' Novo recorde!' : ''}`);
+  if (rec) celebrate();
+  renderAll();
+}
+
+function finishTimed() {
+  const L = live, secs = MODES[mode].secs;
+  const s = L.tally.close();
+  if (s) onStreakClosed(L, s);
+  const n = L.tally.done.reduce((a, x) => a + x.count, 0);
+  const loose = L.tally.done.reduce((a, x) => a + x.loose, 0);
+  lastTimed[mode] = n;
+  session.best[mode] = Math.max(session.best[mode], n);
+  session.items.unshift({ n, sub: `em ${secs} s` });
+  const rec = n > 0 && updateRecord(mode, n);
+  if (n > 0) addHistory(mode, n, 'ao vivo');
+  setStatus(`Fizeste ${plural(n, 'drible', 'dribles')} em ${secs} segundos.${loose ? ` Não contei ${plural(loose, 'ressalto', 'ressaltos')} da bola solta.` : ''}${rec ? ' Novo recorde!' : ''}`);
+  if (rec) celebrate();
+  teardown();
+}
+
+function tick() {
+  const L = live;
+  if (!L || !L.det) return;
+  const now = L.det.time;
+  if (state === 'countdown' && now >= L.tStart) {
+    state = 'listening';
+    setStatus('Dribla o mais que conseguires!');
+    renderControls();
+  }
+  if (state === 'listening' || state === 'demo') {
+    const s = L.tally.tick(now);
+    if (s) onStreakClosed(L, s);
+    if (state === 'listening' && L.tEnd && now >= L.tEnd) return finishTimed();
+    if (state === 'demo' && L.fed && !L.tally.cur) return teardown();
+  }
+  if (state === 'teaching') {
+    const t = L.teach;
+    if ((t.length >= 6 && now - t[t.length - 1].t > 0.8) || now > 15) return finishTeach();
+  }
+  renderCount();
+  renderClock();
+}
+
+/* ----- teaching the ball's sound ----- */
+
+async function startTeach() {
+  const L = await openLive();
+  if (!L) return;
+  setupDetector(L, { relaxed: true }, null);
+  L.teach = [];
+  state = 'teaching';
+  setStatus('Dribla devagar seis vezes, como costumas. Eu oiço e aprendo o som.');
+  renderAll();
+  kick();
+}
+
+function finishTeach() {
+  const cal = learnSound(live.teach, 'top');
+  if (cal) {
+    data.calib = cal;
+    save();
+    setStatus(`Aprendi o som da bola com ${cal.n} toques. Já podes começar.`);
+  } else {
+    setStatus('Não ouvi toques suficientes. Põe o telemóvel mais perto da bola e tenta outra vez.');
+  }
+  teardown();
+}
+
+/* ----- example with simulated sound ----- */
+
+function startDemo() {
+  if (state === 'video') closeVideo();
+  const sr = 22050, plan = demoPlan(), x = synth(sr, plan, plan[plan.length - 1].t + 3);
+  const L = { sr, demo: true };
+  live = L;
+  lastStreak = null;
+  setupDetector(L, { useSound: false }, null);
+  state = 'demo';
+  const t0 = performance.now();
+  let pos = 0;
+  // feed the sound at the pace of the clock, as a microphone would
+  L.feeder = setInterval(() => {
+    const to = Math.min(x.length, Math.round((performance.now() - t0) / 1000 * sr));
+    if (to > pos) { L.det.process(x.subarray(pos, to)); pos = to; }
+    if (pos >= x.length) { L.fed = true; clearInterval(L.feeder); }
+  }, 50);
+  L.timer = setInterval(tick, 100);
+  setStatus('Exemplo com som simulado: 14 dribles e depois a bola foge.');
+  renderAll();
+  kick();
+}
+
+/* ----- counting in a video ----- */
+
+async function decodeFile(file) {
+  const buf = await file.arrayBuffer();
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  let ctx;
+  try { ctx = new OAC(1, 22050, 22050); } catch (e) { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+  const audio = await new Promise((res, rej) => {
+    const p = ctx.decodeAudioData(buf, res, rej);
+    if (p && p.catch) p.catch(rej);
+  });
+  if (ctx.close) ctx.close().catch(() => {});
+  const n = audio.length, ch = audio.numberOfChannels;
+  let x = audio.getChannelData(0);
+  if (ch > 1) {
+    const m = new Float32Array(n);
+    for (let c = 0; c < ch; c++) { const d = audio.getChannelData(c); for (let i = 0; i < n; i++) m[i] += d[i] / ch; }
+    x = m;
+  }
+  return { samples: x, sr: audio.sampleRate };
+}
+
+async function openVideo(file) {
+  if (live) teardown();
+  closeVideo();
+  const V = { name: file.name, ref: `${file.name}|${file.size}`, shown: -1, cursor: 0, playable: true };
+  video = V;
+  state = 'video';
+  ui.videoTitle.textContent = file.name;
+  ui.videoInfo.textContent = '';
+  ui.video.hidden = false;
+  V.url = URL.createObjectURL(file);
+  ui.video.src = V.url;
+  setStatus('A ouvir o som do vídeo…');
+  showCount(0, 'a ler o vídeo');
+  renderAll();
+  try {
+    const { samples, sr } = await decodeFile(file);
+    if (video !== V) return;
+    V.samples = samples;
+    V.sr = sr;
+  } catch (e) {
+    if (video !== V) return;
+    closeVideo();
+    setStatus('Não consegui ler o som deste ficheiro. Experimenta um vídeo mais curto, até 2 ou 3 minutos.');
+    return;
+  }
+  countVideo(true);
+}
+
+function countVideo(first) {
+  const V = video;
+  if (!V || !V.samples) return;
+  V.res = analyse(V.samples, V.sr, data.settings);
+  V.flat = [];
+  V.res.streaks.forEach((s, i) => s.hits.forEach((h, j) => V.flat.push({ t: h.t, streak: i, ord: j + 1 })));
+  V.times = V.flat.map(h => h.t);
+  V.total = V.flat.length;
+  V.best = V.res.streaks.reduce((a, s) => Math.max(a, s.count), 0);
+  V.shown = -1;
+  V.timelineKey = '';
+  const streaks = V.res.streaks.length, loose = V.res.streaks.reduce((a, s) => a + s.loose, 0);
+  const ignored = V.res.events.filter(e => !e.ok && e.why !== 'cedo').length;
+  if (first && V.best >= 3) {
+    const rec = updateRecord('serie', V.best);
+    addHistory('serie', V.best, 'vídeo', V.ref);
+    if (rec) celebrate();
+  }
+  setStatus(V.total
+    ? `Encontrei ${plural(V.total, 'drible', 'dribles')} em ${plural(streaks, 'série', 'séries')}. Carrega no play para ver a contagem.`
+    : 'Não encontrei toques de bola neste vídeo. Experimenta subir a sensibilidade em Afinar a deteção.');
+  const parts = [];
+  if (ignored) parts.push(`${plural(ignored, 'outro som ignorado', 'outros sons ignorados')}`);
+  if (loose) parts.push(`${plural(loose, 'ressalto', 'ressaltos')} da bola solta não contados`);
+  parts.push(`${fmtNum(V.res.duration, 0)} s de som`);
+  ui.videoInfo.textContent = parts.join(' · ') + '.';
+  renderAll();
+  kick();
+}
+
+function closeVideo() {
+  const V = video;
+  if (!V) return;
+  video = null;
+  ui.video.pause();
+  ui.video.removeAttribute('src');
+  ui.video.load();
+  if (V.url) URL.revokeObjectURL(V.url);
+  if (state === 'video') state = 'idle';
+  setStatus(micBlocked ? 'Escolhe um vídeo para contar os dribles.' : 'Toca em Começar e dribla perto do telemóvel.');
+  renderAll();
+}
+
+function videoTime() {
+  const V = video;
+  return V && V.playable && ui.video.readyState > 0 ? ui.video.currentTime : (V ? V.cursor : 0);
+}
+
+function upper(arr, t) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= t) lo = m + 1; else hi = m; }
+  return lo;
+}
+
+function syncVideo() {
+  const V = video;
+  if (!V || !V.res) return;
+  const idx = upper(V.times, videoTime());
+  if (idx !== V.shown) {
+    if (V.shown >= 0 && idx > V.shown && idx - V.shown <= 3 && !ui.video.paused) bump();
+    V.shown = idx;
+    renderCount();
+    renderBoard();
+  }
+}
+
+/* ----- records and history ----- */
+
+function updateRecord(m, n) {
+  const r = data.records[m];
+  if (n > 0 && (!r || n > r.n)) { data.records[m] = { n, at: Date.now() }; save(); return true; }
+  return false;
+}
+
+function addHistory(m, n, src, ref) {
+  if (ref && data.history.some(h => h.ref === ref && h.n === n)) return;
+  data.history.unshift({ at: Date.now(), mode: m, n, src, ref });
+  data.history.length = Math.min(data.history.length, 40);
+  save();
+  renderHistory();
+}
+
+function celebrate() {
+  ui.court.classList.remove('record');
+  void ui.court.offsetWidth;
+  ui.court.classList.add('record');
+  setTimeout(() => ui.court.classList.remove('record'), 2600);
+}
+
+/* ----- drawing ----- */
+
+function showCount(n, label, dim) {
+  const s = String(n);
+  if (ui.count.textContent !== s) ui.count.textContent = s;
+  ui.count.classList.toggle('wide', s.length >= 3);
+  ui.count.classList.toggle('dim', !!dim);
+  ui.countLabel.textContent = label;
+}
+
+function bump() {
+  ui.count.classList.remove('bump');
+  void ui.count.offsetWidth;
+  ui.count.classList.add('bump');
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  ui.circle.appendChild(r);
+  setTimeout(() => r.remove(), 700);
+}
+
+function renderCount() {
+  const L = live;
+  if (state === 'video') {
+    const V = video;
+    if (!V || !V.res) return showCount(0, 'a ler o vídeo');
+    const t = videoTime();
+    if (V.shown <= 0) {
+      if (t < 0.05 && ui.video.paused) return showCount(V.best, V.best ? 'melhor série do vídeo' : 'nenhum drible', true);
+      return showCount(0, 'dribles seguidos');
+    }
+    const h = V.flat[V.shown - 1], s = V.res.streaks[h.streak], ended = t > s.end + 0.6;
+    return showCount(h.ord, ended ? 'série terminada' : 'dribles seguidos', ended);
+  }
+  if (state === 'teaching') return showCount(L.teach.length, 'toques ouvidos');
+  if (state === 'countdown') return showCount(Math.max(1, Math.ceil(L.tStart - L.det.time)), 'prepara-te');
+  const secs = state === 'demo' ? 0 : MODES[mode].secs;
+  if (secs) {
+    if (L && state === 'listening') return showCount(L.tally.total, `dribles em ${secs} s`);
+    return showCount(lastTimed[mode] || 0, `dribles em ${secs} s`, lastTimed[mode] != null);
+  }
+  if (L && L.tally && L.tally.running) return showCount(L.tally.running, 'dribles seguidos');
+  if (lastStreak) return showCount(lastStreak.count, lastStreak.demo ? 'exemplo' : 'última série', true);
+  return showCount(0, 'dribles seguidos');
+}
+
+function renderClock() {
+  const L = live, secs = state === 'demo' ? 0 : MODES[mode].secs;
+  let s = 0;
+  if (state === 'video') s = videoTime();
+  else if (secs) s = L && state === 'listening' ? L.tEnd - L.det.time : secs;
+  else if (L && L.tally && L.tally.cur) s = L.det.time - L.tally.cur.start;
+  ui.clock.textContent = fmtClock(s, !!secs && state !== 'video');
+}
+
+function renderBoard() {
+  const V = state === 'video' && video && video.res ? video : null;
+  const secs = MODES[mode].secs;
+  const rec = data.records[V ? 'serie' : mode];
+  ui.record.textContent = rec ? rec.n : 0;
+  if (V) {
+    ui.bestLbl.textContent = 'Melhor série';
+    ui.best.textContent = V.best;
+    ui.totalLbl.textContent = 'No vídeo';
+    ui.total.textContent = V.shown > 0 || videoTime() > 0.05 ? Math.max(0, V.shown) : V.total;
+    return;
+  }
+  ui.bestLbl.textContent = secs ? `Melhor em ${secs} s` : 'Melhor série';
+  ui.best.textContent = session.best[mode];
+  ui.totalLbl.textContent = 'Total';
+  ui.total.textContent = session.total;
+}
+
+function renderControls() {
+  const running = ['countdown', 'listening', 'teaching', 'demo'].includes(state);
+  ui.go.hidden = micBlocked;
+  ui.teach.hidden = micBlocked;
+  ui.notice.hidden = !micBlocked;
+  ui.fileLbl.classList.toggle('primary', micBlocked);
+  ui.fileLbl.firstChild.textContent = micBlocked ? 'Escolher um vídeo' : 'Contar num vídeo';
+  ui.go.textContent = { starting: 'A ligar…', countdown: 'Parar', listening: 'Parar', teaching: 'Cancelar', demo: 'Parar o exemplo' }[state] || 'Começar';
+  ui.go.classList.toggle('stop', running);
+  ui.go.disabled = state === 'starting';
+  ui.teach.disabled = running || state === 'starting';
+  ui.demo.disabled = running || state === 'starting';
+  ui.file.disabled = running || state === 'starting';
+  ui.fileLbl.toggleAttribute('aria-disabled', ui.file.disabled);
+  ui.fileLbl.style.opacity = ui.file.disabled ? '.5' : '';
+  modeBtns.forEach(b => {
+    b.setAttribute('aria-checked', String(b.dataset.mode === mode));
+    b.disabled = running || state === 'starting';
+  });
+  ui.court.toggleAttribute('data-live', ['countdown', 'listening', 'teaching'].includes(state));
+  ui.modeTag.textContent = state === 'demo' ? 'Exemplo' : state === 'video' ? 'Vídeo' : state === 'teaching' ? 'A aprender' : MODES[mode].label;
+  ui.videoSec.hidden = !video;
+  ui.scopeSec.hidden = !!video || (micBlocked && !scopeL);
+}
+
+function renderSeries() {
+  const V = state === 'video' && video && video.res ? video : null;
+  ui.seriesTitle.textContent = V ? 'Séries no vídeo' : 'Séries desta sessão';
+  const items = V
+    ? V.res.streaks.map(s => ({ n: s.count, sub: `aos ${fmtClock(s.start)}`, t: s.start })).filter(s => s.n > 0)
+    : session.items.slice(0, 24);
+  const best = items.reduce((a, s) => Math.max(a, s.n), 0);
+  ui.series.replaceChildren(...items.map(s => {
+    const li = document.createElement('li');
+    const chip = document.createElement(V ? 'button' : 'div');
+    chip.className = 'chip' + (s.n === best && items.length > 1 ? ' top' : '');
+    if (V) {
+      chip.type = 'button';
+      chip.addEventListener('click', () => seekVideo(Math.max(0, s.t - 0.5)));
+    }
+    const b = document.createElement('b'), sp = document.createElement('span');
+    b.textContent = s.n;
+    sp.textContent = s.sub;
+    chip.append(b, sp);
+    li.append(chip);
+    return li;
+  }));
+  ui.seriesEmpty.hidden = items.length > 0;
+  ui.seriesEmpty.textContent = V ? 'Nenhuma série encontrada neste vídeo.' : 'As séries aparecem aqui quando a bola para.';
+}
+
+function renderHistory() {
+  const items = data.history.slice(0, 12);
+  ui.history.replaceChildren(...items.map(h => {
+    const li = document.createElement('li'), sp = document.createElement('span'), b = document.createElement('b');
+    sp.textContent = `${fmtDate(h.at)} · ${(MODES[h.mode] || MODES.serie).label} · ${h.src}`;
+    b.textContent = h.n;
+    li.append(sp, b);
+    return li;
+  }));
+  ui.historyEmpty.hidden = items.length > 0;
+}
+
+function renderCalib() {
+  const c = data.calib;
+  if (micBlocked) ui.calibInfo.textContent = 'Vídeos até 2 ou 3 minutos.';
+  else ui.calibInfo.textContent = c
+    ? `Som da bola aprendido a ${fmtDate(c.at)}, com ${c.n} toques.`
+    : 'Ainda não ensinaste o som da bola. A app conta na mesma, mas pode confundir-se com palmas ou vozes.';
+  ui.forget.hidden = !c || micBlocked;
+}
+
+function renderSettings() {
+  const s = data.settings;
+  ui.sens.value = s.sens; ui.sensOut.textContent = s.sens;
+  ui.minGap.value = s.minGap; ui.minGapOut.textContent = `${s.minGap} ms`;
+  ui.streakGap.value = s.streakGap; ui.streakGapOut.textContent = `${fmtNum(s.streakGap)} s`;
+  ui.useSound.checked = s.useSound;
+  ui.dropLoose.checked = s.dropLoose;
+}
+
+function renderAll() {
+  renderControls();
+  renderCount();
+  renderClock();
+  renderBoard();
+  renderSeries();
+  renderCalib();
+  drawScope();
+  if (video) drawTimeline();
+}
+
+let palette = null, paletteAt = 0;
+function colors() {
+  const now = performance.now();
+  if (!palette || now - paletteAt > 1000) {
+    const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+    palette = { ink: v('--ink'), ink2: v('--ink-2'), ball: v('--ball'), muted: v('--muted'), hair: v('--hair'), trace: v('--trace') };
+    paletteAt = now;
+  }
+  return palette;
+}
+
+function prep(c) {
+  const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) return null;
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  const g = c.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  return { g, w, h };
+}
+
+const dbY = (db, h) => h - 4 - (Math.max(-80, Math.min(0, db)) + 80) / 80 * (h - 14);
+
+function drawScope() {
+  if (ui.scopeSec.hidden) return;
+  const p = prep(ui.scope);
+  if (!p) return;
+  const { g, w, h } = p, col = colors(), L = scopeL;
+  g.strokeStyle = col.hair;
+  g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, h - 0.5); g.lineTo(w, h - 0.5); g.stroke();
+  if (!L || !L.det || L.lf < 0) {
+    g.fillStyle = col.ink2;
+    g.font = '14px ' + getComputedStyle(document.body).fontFamily;
+    g.fillText(micBlocked ? 'Toca em Ver um exemplo para ver o som.' : 'Começa a ouvir para ver o som aqui.', 2, h / 2 + 5);
+    return;
+  }
+  const N = SCOPE_N, f = L.lf, hop = L.det.hop / L.sr, now = (f + 1) * hop;
+  g.beginPath();
+  g.moveTo(0, h);
+  for (let i = 0; i < N; i++) {
+    const k = f - N + 1 + i;
+    g.lineTo(i / (N - 1) * w, dbY(k < 0 ? -120 : L.levels[k % N], h));
+  }
+  g.lineTo(w, h);
+  g.closePath();
+  g.fillStyle = col.trace;
+  g.fill();
+  g.setLineDash([4, 4]);
+  g.strokeStyle = col.ink2;
+  g.beginPath(); g.moveTo(0, dbY(L.floor, h)); g.lineTo(w, dbY(L.floor, h)); g.stroke();
+  g.setLineDash([]);
+  for (const ev of L.events) {
+    const age = now - ev.t;
+    if (age < 0 || age > N * hop) continue;
+    const x = w - age / (N * hop) * w;
+    if (ev.ok) {
+      g.fillStyle = col.ball;
+      g.fillRect(x - 1, 9, 2, h - 9);
+      g.beginPath(); g.arc(x, 7, 4.5, 0, 2 * Math.PI); g.fill();
+    } else if (ev.why !== 'cedo') {
+      g.fillStyle = col.muted;
+      g.fillRect(x - 1, dbY(ev.db, h), 2, h - dbY(ev.db, h));
+    }
+  }
+}
+
+function drawTimeline() {
+  const V = video;
+  const p = prep(ui.timeline);
+  if (!p) return;
+  const { g, w, h } = p, col = colors();
+  if (!V || !V.res) {
+    g.fillStyle = col.ink2;
+    g.font = '14px ' + getComputedStyle(document.body).fontFamily;
+    g.fillText('A ouvir o vídeo…', 2, h / 2 + 5);
+    return;
+  }
+  const R = V.res, dur = R.duration || 1, fs = R.hop / R.sr, X = t => t / dur * w;
+  const key = `${w}x${h}`;
+  if (V.timelineKey !== key) {
+    // loudest frame per pixel column
+    V.cols = new Float32Array(Math.ceil(w)).fill(-120);
+    R.levels.forEach((db, i) => { const c = Math.min(V.cols.length - 1, Math.floor(X(i * fs))); if (db > V.cols[c]) V.cols[c] = db; });
+    V.timelineKey = key;
+  }
+  g.fillStyle = col.hair;
+  for (const s of R.streaks) g.fillRect(X(s.start) - 2, 0, Math.max(4, X(s.end) - X(s.start) + 4), h);
+  g.beginPath();
+  g.moveTo(0, h);
+  V.cols.forEach((db, i) => g.lineTo(i, dbY(db, h)));
+  g.lineTo(w, h);
+  g.closePath();
+  g.fillStyle = col.trace;
+  g.fill();
+  for (const ev of R.events) if (!ev.ok && ev.why !== 'cedo') { g.fillStyle = col.muted; g.fillRect(X(ev.t) - 0.75, h - 10, 1.5, 10); }
+  g.fillStyle = col.ball;
+  for (const t of V.times) g.fillRect(X(t) - 0.75, 0, 1.5, h - 12);
+  g.fillStyle = col.ink;
+  g.fillRect(X(videoTime()) - 1, 0, 2, h);
+}
+
+function loop() {
+  raf = 0;
+  if (state === 'video') { syncVideo(); drawTimeline(); renderClock(); }
+  else if (scopeL) drawScope();
+  if (state !== 'idle') raf = requestAnimationFrame(loop);
+}
+function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+
+function seekVideo(t) {
+  const V = video;
+  if (!V) return;
+  V.cursor = t;
+  if (V.playable && ui.video.readyState > 0) ui.video.currentTime = t;
+  syncVideo();
+  renderCount();
+  renderClock();
+  drawTimeline();
+}
+
+/* ----- wiring ----- */
+
+modeBtns.forEach(b => b.addEventListener('click', () => {
+  if (b.disabled || mode === b.dataset.mode) return;
+  mode = b.dataset.mode;
+  data.mode = mode;
+  save();
+  if (state === 'video') closeVideo();
+  setStatus(MODES[mode].secs
+    ? `Desafio de ${MODES[mode].secs} segundos: toca em Começar, conta 3, 2, 1 e dribla o mais que conseguires.`
+    : 'Toca em Começar e dribla perto do telemóvel.');
+  renderAll();
+}));
+
+ui.go.addEventListener('click', () => {
+  if (state === 'idle' || state === 'video') startCount();
+  else if (state === 'listening' || state === 'countdown') stopCount();
+  else if (state === 'teaching') { setStatus('Cancelado. O som aprendido antes continua guardado.'); teardown(); }
+  else if (state === 'demo') { setStatus('Exemplo parado.'); teardown(); }
+});
+ui.teach.addEventListener('click', () => { if (state === 'idle' || state === 'video') startTeach(); });
+ui.demo.addEventListener('click', () => { if (state === 'idle' || state === 'video') startDemo(); });
+ui.file.addEventListener('change', () => {
+  const f = ui.file.files && ui.file.files[0];
+  ui.file.value = '';
+  if (f) openVideo(f);
+});
+ui.videoClose.addEventListener('click', closeVideo);
+ui.video.addEventListener('error', () => {
+  if (!video || !ui.video.getAttribute('src')) return;
+  video.playable = false;
+  ui.video.hidden = true;
+  if (video.res) ui.videoInfo.textContent += ' Este browser não mostra o vídeo aqui; toca na linha do tempo para ver cada momento.';
+});
+['play', 'pause', 'seeked', 'timeupdate'].forEach(n => ui.video.addEventListener(n, () => { if (video) { syncVideo(); renderCount(); kick(); } }));
+ui.timeline.addEventListener('click', e => {
+  const V = video;
+  if (!V || !V.res) return;
+  const r = ui.timeline.getBoundingClientRect();
+  seekVideo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * V.res.duration);
+});
+
+let recount = 0;
+function settingChanged() {
+  const s = data.settings;
+  s.sens = +ui.sens.value;
+  s.minGap = +ui.minGap.value;
+  s.streakGap = +ui.streakGap.value;
+  s.useSound = ui.useSound.checked;
+  s.dropLoose = ui.dropLoose.checked;
+  save();
+  renderSettings();
+  if (live && live.det) {
+    live.det.set(detSettings(state === 'teaching' ? { relaxed: true } : live.demo ? { useSound: false } : {}));
+    live.tally.gap = s.streakGap;
+    live.tally.dropLoose = s.dropLoose;
+  }
+  if (video && video.samples) { clearTimeout(recount); recount = setTimeout(() => countVideo(false), 250); }
+}
+['sens', 'minGap', 'streakGap'].forEach(id => ui[id].addEventListener('input', settingChanged));
+['useSound', 'dropLoose'].forEach(id => ui[id].addEventListener('change', settingChanged));
+
+ui.forget.addEventListener('click', () => {
+  data.calib = null;
+  save();
+  if (live && live.det && state !== 'teaching') live.det.calib = null;
+  setStatus('Esqueci o som da bola. Podes ensiná-lo outra vez quando quiseres.');
+  renderCalib();
+});
+
+let clearArmed = 0;
+ui.clearRecords.addEventListener('click', () => {
+  if (!clearArmed) {
+    ui.clearRecords.textContent = 'Toca outra vez para apagar tudo';
+    clearArmed = setTimeout(() => { clearArmed = 0; ui.clearRecords.textContent = 'Apagar recordes e resultados'; }, 4000);
+    return;
+  }
+  clearTimeout(clearArmed);
+  clearArmed = 0;
+  ui.clearRecords.textContent = 'Apagar recordes e resultados';
+  data.records = {};
+  data.history = [];
+  save();
+  renderHistory();
+  renderBoard();
+  setStatus('Recordes e resultados apagados.');
+});
+
+window.addEventListener('resize', () => { drawScope(); if (video) drawTimeline(); });
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { palette = null; renderAll(); });
+new MutationObserver(() => { palette = null; renderAll(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && live) keepAwake(true); });
+
+window.__dribble = { BounceDetector, Tally, analyse, learnSound, looseBounces, synth, demoPlan, fakeMic: null };
+
+renderSettings();
+renderHistory();
+if (micBlocked) {
+  // only videos here: the video button goes right under the counter, the timed modes go away
+  ui.court.after(ui.notice, document.getElementById('actions'), document.getElementById('under'));
+  document.getElementById('modes').hidden = true;
+  mode = 'serie';
+  setStatus('Escolhe um vídeo do drible para contar os toques.');
+}
+renderAll();
+})();
+</script>
+
+</body>
+</html>
