@@ -264,7 +264,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--ball); }
         <li>Põe o telemóvel no chão, a um ou dois metros de onde a bola bate, com o microfone destapado.</li>
         <li>Antes da primeira vez, toca em Ensinar o som da bola e dribla seis vezes com calma.</li>
         <li>Desliga a televisão e a música: menos barulho, menos enganos.</li>
-        <li>No modo Série a contagem fecha quando a bola fica parada dois segundos. Depois é só recomeçar.</li>
+        <li>A contagem só arranca ao terceiro drible seguido, para não contar sons soltos. A série fecha quando a bola fica parada dois segundos; depois é só recomeçar.</li>
         <li>Se contar a mais, baixa a sensibilidade. Se falhar dribles, sobe.</li>
         <li>Nos vídeos, grava com o telemóvel pousado e sem música por cima.</li>
       </ul>
@@ -532,12 +532,17 @@ function learnSound(evs, anchor) {
 // a run of ever shorter gaps with ever quieter hits, as a dropped ball does.
 function looseBounces(hits) {
   const n = hits.length;
-  if (n < 5) return 0;
+  if (n < 3) return 0;
   const gap = j => hits[j].t - hits[j - 1].t;
+  const shrinks = j => { const r = gap(j) / gap(j - 1); return r > 0.6 && r < 0.9 && hits[j].db <= hits[j - 1].db + 1; };
+  // every gap shorter than the one before: nobody dribbled, the ball was only dropped
+  let dropped = true;
+  for (let j = 2; j < n && dropped; j++) dropped = shrinks(j);
+  if (dropped) return n - 1;
+  if (n < 5) return 0;
   const med = median(hits.map(h => h.db));
   let end = n;
   while (end > 3 && gap(end - 1) < 0.3 && hits[end - 1].db < med - 6) end--;   // the last tiny taps
-  const shrinks = j => { const r = gap(j) / gap(j - 1); return r > 0.6 && r < 0.9 && hits[j].db <= hits[j - 1].db + 1; };
   let k = 0, j = end - 1;
   // the last gap may hide a bounce too quiet to count: it then spans two shrinking gaps
   if (j >= 3 && shrinks(j - 1)) {
@@ -553,49 +558,96 @@ function looseBounces(hits) {
   return Math.min(drop, n - 1);
 }
 
-// Groups hits into series: a pause longer than `gap` seconds ends one.
+// Three hits at a dribbling pace and loudness: gaps under 1.5 s, neither more
+// than twice the other, levels within 10 dB, and not the shrinking, fading
+// pattern of a ball bouncing on its own.
+function steady(h) {
+  if (h.length < 3) return false;
+  const g1 = h[1].t - h[0].t, g2 = h[2].t - h[1].t, dbs = h.map(x => x.db);
+  if (Math.max(g1, g2) > 1.5 || Math.max(g1, g2) > 2 * Math.min(g1, g2) || Math.max(...dbs) - Math.min(...dbs) > 10) return false;
+  return !(g2 < 0.9 * g1 && g2 > 0.6 * g1 && dbs[1] < dbs[0] - 0.5 && dbs[2] < dbs[1] - 0.5);
+}
+
+// Marks the detector events behind hits that end up not counting.
+function uncount(hits, why) {
+  for (const h of hits) if (h.ev) { h.ev.ok = false; h.ev.why = why; h.ev.pending = false; }
+}
+
+// Groups hits into series: a pause longer than `gap` seconds ends one. A series
+// only counts from its first three hits at a dribbling pace, so lone sounds
+// (a door, a word, a clap) never make one. After each call, `added` and
+// `removed` say how many hits started or stopped counting.
 class Tally {
-  constructor(gap, dropLoose) { this.gap = gap; this.dropLoose = dropLoose; this.cur = null; this.done = []; }
-  hit(t, db) {
-    const closed = this.cur && t - this.cur.last > this.gap ? this.close() : null;
-    if (!this.cur) this.cur = { start: t, last: t, hits: [] };
-    this.cur.hits.push({ t, db });
-    this.cur.last = t;
+  constructor(gap, dropLoose) {
+    this.gap = gap; this.dropLoose = dropLoose; this.cur = null; this.done = []; this.added = 0; this.removed = 0;
+  }
+  hit(t, db, ev) {
+    this.added = this.removed = 0;
+    const closed = this.cur && t - this.cur.last > this.gap ? this._close() : null;
+    if (!this.cur) this.cur = { start: t, last: t, hits: [], ok: false };
+    const c = this.cur;
+    c.hits.push({ t, db, ev });
+    c.last = t;
+    if (c.ok) this.added = 1;
+    else if (steady(c.hits.slice(-3))) {
+      uncount(c.hits.slice(0, -3), 'solto');
+      c.hits = c.hits.slice(-3);
+      c.hits.forEach(h => { if (h.ev) h.ev.pending = false; });
+      c.start = c.hits[0].t;
+      c.ok = true;
+      this.added = 3;
+    } else if (ev) ev.pending = true;
     return closed;
   }
-  tick(now) { return this.cur && now - this.cur.last > this.gap ? this.close() : null; }
+  tick(now) {
+    this.added = this.removed = 0;
+    return this.cur && now - this.cur.last > this.gap ? this._close() : null;
+  }
   close() {
+    this.added = this.removed = 0;
+    return this._close();
+  }
+  _close() {
     const c = this.cur;
     if (!c) return null;
     this.cur = null;
+    if (!c.ok) { uncount(c.hits, 'solto'); return null; }
     const loose = this.dropLoose ? looseBounces(c.hits) : 0;
     const hits = c.hits.slice(0, c.hits.length - loose);
+    uncount(c.hits.slice(hits.length), 'solta');
+    if (hits.length < 3) {
+      // what was left were the ball's own bounces after a drop
+      uncount(hits, 'solta');
+      this.removed += c.hits.length;
+      return null;
+    }
+    this.removed += loose;
     const s = { start: c.start, end: hits[hits.length - 1].t, count: hits.length, loose, hits };
     this.done.push(s);
     return s;
   }
-  get running() { return this.cur ? this.cur.hits.length : 0; }
+  get running() { return this.cur && this.cur.ok ? this.cur.hits.length : 0; }
   get total() { return this.done.reduce((a, s) => a + s.count, 0) + this.running; }
 }
 
 // Counts a whole recording. A first pass finds the bounces, a second one keeps
-// only the hits that sound like them.
+// only the hits that sound like those of the first pass's series.
 function analyse(x, sr, s) {
   const run = (calib, useSound) => {
     const events = [];
     const det = new BounceDetector(sr, { settings: { sens: s.sens / 100, minGapMs: s.minGap, useSound }, calib, keepLevels: true, onEvent: e => events.push(e) });
     for (let i = 0; i < x.length; i += 8192) det.process(x.subarray(i, i + 8192));
-    return { events, levels: det.levels, hop: det.hop };
+    const tally = new Tally(s.streakGap, s.dropLoose);
+    for (const e of events) if (e.ok) tally.hit(e.t, e.db, e);
+    tally.close();
+    return { events, levels: det.levels, hop: det.hop, streaks: tally.done };
   };
   let r = run(null, false), learned = null;
   if (s.useSound) {
     learned = learnSound(r.events.filter(e => e.ok), 'median');
     if (learned) r = run(learned, true);
   }
-  const tally = new Tally(s.streakGap, s.dropLoose);
-  for (const e of r.events) if (e.ok) tally.hit(e.t, e.db);
-  tally.close();
-  return { duration: x.length / sr, sr, hop: r.hop, levels: r.levels, events: r.events, streaks: tally.done, learned: !!learned };
+  return { duration: x.length / sr, sr, hop: r.hop, levels: r.levels, events: r.events, streaks: r.streaks, learned: !!learned };
 }
 
 // Simulated sound for the example: ball, hand, clap or voice at given times.
@@ -835,8 +887,7 @@ function stopCount() {
   const L = live;
   if (!L) return;
   if (state === 'listening' && !MODES[mode].secs) {
-    const s = L.tally.close();
-    if (s) onStreakClosed(L, s);
+    afterClose(L, L.tally.close());
   } else if (state === 'listening' || state === 'countdown') {
     setStatus('Desafio interrompido. Toca em Começar para tentar outra vez.');
   }
@@ -848,15 +899,24 @@ function onDetEvent(L, ev) {
   if (L.events.length > 120) L.events.shift();
   if (live !== L || !ev.ok) return;
   if (state === 'teaching') { L.teach.push(ev); renderCount(); return; }
-  if (state === 'listening' && L.tEnd && (ev.t < L.tStart || ev.t > L.tEnd)) return;
-  if (state !== 'listening' && state !== 'demo') return;
-  const closed = L.tally.hit(ev.t, ev.db);
-  if (closed) onStreakClosed(L, closed);
-  if (!L.demo) session.total++;
-  bump();
+  const inPlay = state === 'demo' || (state === 'listening' && !(L.tEnd && (ev.t < L.tStart || ev.t > L.tEnd)));
+  if (!inPlay) { ev.ok = false; ev.why = 'fora'; return; }
+  const closed = L.tally.hit(ev.t, ev.db, ev);
+  if (!L.demo) session.total += L.tally.added;
+  afterClose(L, closed);
+  if (L.tally.added) {
+    bump();
+    if (L.tally.running === L.tally.added && !L.tEnd && !L.demo) setStatus('A contar!');
+  }
   renderCount();
   renderBoard();
-  if (L.tally.running === 1 && !L.tEnd && !L.demo) setStatus('A contar!');
+}
+
+// After the tally may have closed a series: hits it took back leave the total.
+function afterClose(L, s) {
+  if (!L.demo) session.total -= L.tally.removed;
+  if (s) onStreakClosed(L, s);
+  else if (L.tally.removed && !L.tEnd && !L.demo) setStatus('Eram quase só ressaltos da bola sozinha: essa série não conta.');
 }
 
 function onStreakClosed(L, s) {
@@ -866,7 +926,6 @@ function onStreakClosed(L, s) {
     renderCount();
     return;
   }
-  session.total -= s.loose;
   if (L.tEnd) { renderBoard(); return; }
   lastStreak = s;
   session.items.unshift({ n: s.count, sub: `série de ${fmtClock(s.end - s.start)}` });
@@ -880,8 +939,7 @@ function onStreakClosed(L, s) {
 
 function finishTimed() {
   const L = live, secs = MODES[mode].secs;
-  const s = L.tally.close();
-  if (s) onStreakClosed(L, s);
+  afterClose(L, L.tally.close());
   const n = L.tally.done.reduce((a, x) => a + x.count, 0);
   const loose = L.tally.done.reduce((a, x) => a + x.loose, 0);
   lastTimed[mode] = n;
@@ -904,8 +962,7 @@ function tick() {
     renderControls();
   }
   if (state === 'listening' || state === 'demo') {
-    const s = L.tally.tick(now);
-    if (s) onStreakClosed(L, s);
+    afterClose(L, L.tally.tick(now));
     if (state === 'listening' && L.tEnd && now >= L.tEnd) return finishTimed();
     if (state === 'demo' && L.fed && !L.tally.cur) return teardown();
   }
@@ -1155,7 +1212,7 @@ function renderClock() {
   let s = 0;
   if (state === 'video') s = videoTime();
   else if (secs) s = L && state === 'listening' ? L.tEnd - L.det.time : secs;
-  else if (L && L.tally && L.tally.cur) s = L.det.time - L.tally.cur.start;
+  else if (L && L.tally && L.tally.running) s = L.det.time - L.tally.cur.start;
   ui.clock.textContent = fmtClock(s, !!secs && state !== 'video');
 }
 
@@ -1326,7 +1383,12 @@ function drawScope() {
     const age = now - ev.t;
     if (age < 0 || age > N * hop) continue;
     const x = w - age / (N * hop) * w;
-    if (ev.ok) {
+    if (ev.ok && ev.pending) {
+      // heard, but waiting for the series' third hit
+      g.strokeStyle = col.ball;
+      g.lineWidth = 1.5;
+      g.beginPath(); g.arc(x, 7, 4, 0, 2 * Math.PI); g.stroke();
+    } else if (ev.ok) {
       g.fillStyle = col.ball;
       g.fillRect(x - 1, 9, 2, h - 9);
       g.beginPath(); g.arc(x, 7, 4.5, 0, 2 * Math.PI); g.fill();
